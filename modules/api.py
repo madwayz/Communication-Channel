@@ -1,5 +1,7 @@
 from matplotlib.pyplot import *
 from scipy.stats import binom
+from modules.utils import writeInFile
+import os
 
 class mathcadApi:
     def rbinom(self, size, maxNum, p):
@@ -11,29 +13,46 @@ class Source:
 
     # Модель BPSK модулятора
     def BPSK(self, q, tau, matrix):
-        # title('Фазовая модуляция')
-        # xlabel('Время')
-        # ylabel('Амлитуда модуляции')
+        title('BPSK модулятор')
+        xlabel('Модельное время')
+        ylabel('Амлитуда модуляции')
 
-        phi = None
         T = tau # Период несущего колебания
         Ts = T / q # Период дескритизации
         t = [dig for dig in np.arange(0, len(matrix) * tau - Ts, Ts)] # Модельное время
-        if self.debug: print('''
-            [Модельное время] {}
-            [Период дескритизации] {}
-            [Период несущего колебания] {}
-        '''.format(t, Ts, T))
+        if self.debug:
+            print('''
+                [Период дескритизации] {}
+                [Период несущего колебания] {}
+            '''.format(Ts, T))
 
+        path = os.getcwd() + '\data\model_text.dat'
+        writeInFile(path, 'Модельное время')
 
-        #ReqByTime = [int(dig) for dig in t / Ts]
+        """
+        Получить массив отсчетов сигнала с выхода модулятора M, 
+        соответствующих модельному времени. 
+        При подаче на вход массива
+        """
+        M = list()
+        count = 0
+        print('Пожалуйста, подождите. Записываем массив отсчётов сигнала')
         for descrPeriod in t: # Период дескритизации
             i = int(np.floor(descrPeriod/tau))
-            if matrix[int(np.floor(descrPeriod/T))] == 0: phi = 0
+            if matrix[i] == 0: phi = 0
             else: phi = np.pi
 
-        if self.debug: print('[]')
-        plot(np.sin(2*np.pi * t/T + phi))
+            M.append([count, np.sin(2*np.pi * descrPeriod/T + phi)])
+            count += 1
+            #if self.debug: print('[PHI: {}]'.format(phi))
+
+        #print(M)
+        #print(t)
+        # if self.debug:
+        #     for k, v in M:
+        #         if 177360 < k < 177382  :
+        #             print('{} - {}'.format(k, v))
+
 
 class GraphicSettings(object):
     def __init__(self, b_grid=False):
