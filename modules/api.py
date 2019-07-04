@@ -26,8 +26,8 @@ class Source:
                 [Период несущего колебания] {}
             '''.format(Ts, T))
 
-        path = os.getcwd() + '\data\model_text.dat'
-        writeInFile(path, 'Модельное время')
+        path = os.getcwd()
+        writeInFile(str(t), path + '\data\model_text.dat', 'Модельное время')
 
         """
         Получить массив отсчетов сигнала с выхода модулятора M, 
@@ -42,16 +42,17 @@ class Source:
             if matrix[i] == 0: phi = 0
             else: phi = np.pi
 
-            M.append([count, np.sin(2*np.pi * descrPeriod/T + phi)])
+            M.append([np.sin(2*np.pi * descrPeriod/T + phi)])
             count += 1
             #if self.debug: print('[PHI: {}]'.format(phi))
 
-        #print(M)
-        #print(t)
-        # if self.debug:
-        #     for k, v in M:
-        #         if 177360 < k < 177382  :
-        #             print('{} - {}'.format(k, v))
+        writeInFile(str(M), path + '\data\count_signals.txt', 'Отсчёты сигналов')
+
+        if self.debug:
+            for k, v in M:
+                print('{} - {}'.format(k, v))
+
+        plot(np.array(M), np.array(t))
 
 
 class GraphicSettings(object):
