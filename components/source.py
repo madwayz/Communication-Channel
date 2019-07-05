@@ -103,5 +103,5 @@ class digitalTransmission(object):
         signalsWithNoise = cSignals + noise
 
         W = [i for i in range(len(signalsWithNoise))]
-        savePlot(plt, 'p2.png', W, signalsWithNoise)
+        savePlot(plt, 'p2.png', W, signalsWithNoise, clear=False)
         self.detect(signalsWithNoise)

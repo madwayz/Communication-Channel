@@ -12,8 +12,10 @@ def writeInFile(data, path, text):
         print('{} был(-о/и) записан(-о/ы) в {}'.format(text, path))
 
 
-def savePlot(plt, name, x_coords, y_coords):
-    plt.cla()
+def savePlot(plt, name, x_coords, y_coords, clear=True):
+    if clear:
+        plt.cla()
+
     plt.plot(x_coords, y_coords)
     plt.savefig(img_path + name)
     print('Сохраняю график в {}'.format(img_path + name))
