@@ -39,29 +39,28 @@ class digitalTransmission(object):
         #     {} - {}
         #     '''.format(k, v))
 
-        return np.array(cSignals)
+        #return np.array(cSignals)
+        return cSignals
 
     def detect(self, signalsWithNoise):
-        #signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
-        print(np.floor(len(signalsWithNoise)))
-        #length = int(np.floor(len(signalsWithNoise) / self.q)) - 1
-        a = 0
-        b = 0
-        for i in range(int(len(signalsWithNoise) / self.q) - 1):
-            _min = self.q * i
-            _max = (self.q * i) + (self.q - 1)
-            for j in range(_min, _max):
-                j = _min
-                a += signalsWithNoise[j] * np.sin(2 * np.pi / self.period * (j * self.Ts) + np.pi)
-                b += signalsWithNoise[j] * np.sin(2 * np.pi / self.period * (j * self.Ts))
-                if a > b:
+        signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
+        print(signalsWithNoise)
+        #print(np.floor(len(signalsWithNoise)))
+        length = int(np.floor(len(signalsWithNoise) / self.q)) + 1
+        for i in range(length):
+            a = 0
+            b = 0
+            for k in range(i * self.q, self.q * (i + 1)-1):
+                a += signalsWithNoise[k] * np.sin(2 * np.pi * (k * self.Ts / self.period))
+                b += signalsWithNoise[k] * np.sin(np.pi  + 2 * np.pi * (k * self.Ts) / self.period)
+                if a < b:
                     signalsWithNoise[i] = 1
                 else:
                     signalsWithNoise[i] = 0
 
-        writeInFile(str(signalsWithNoise), path + '\data\detected_signals.txt', 'Проверенные детектором сигналы')
-        print(signalsWithNoise[:int(len(signalsWithNoise))-1:])
-        return signalsWithNoise[:int(len(signalsWithNoise))-1:]
+
+        writeInFile(str(signalsWithNoise[:length:]), path + '\data\detected_signals.txt', 'Проверенные детектором сигналы')
+        return signalsWithNoise[:length:]
     #TODO: Пофиксить сумму
     #TODO: Доделать чекер
 
@@ -101,7 +100,8 @@ class digitalTransmission(object):
         api = mathcadApi()
         noise = api.rnorm(len(cSignals), 0, self.sigma)
         signalsWithNoise = cSignals + noise
+        print(np.ndarray.tolist(signalsWithNoise))
 
         W = [i for i in range(len(signalsWithNoise))]
-        savePlot(plt, 'p2.png', W, signalsWithNoise, clear=False)
+        savePlot(plt, 'p2.png', W, signalsWithNoise)
         self.detect(signalsWithNoise)
