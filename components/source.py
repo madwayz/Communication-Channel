@@ -1,5 +1,6 @@
-from matplotlib.pyplot import *
-from modules.utils import writeInFile
+from matplotlib import pyplot as plt
+import numpy as np
+from modules.utils import writeInFile, savePlot
 from modules.api import mathcadApi
 from config import path
 
@@ -13,7 +14,6 @@ class digitalTransmission(object):
         self.period = self.tau  # Период несущего колебания
         self.Ts = self.period / self.q  # Период дескритизации
         self.time = [dig for dig in np.arange(0, len(self.matrix) * self.tau - self.Ts, self.Ts)]  # Модельное время
-        self.fig = Figure()
 
     # Модель BPSK модулятора
     def BPSK(self):
@@ -42,18 +42,36 @@ class digitalTransmission(object):
         return np.array(cSignals)
 
     def detect(self, signalsWithNoise):
-        for i in range(int(np.floor(len(self.matrix) / self.q)) - 1):
+        signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
+        print(np.floor(len(signalsWithNoise)))
+        length = int(np.floor(len(signalsWithNoise) / self.q)) - 1
+        a = 0
+        b = 0
+        for i in range(length):
             _min = self.q * i
             _max = (self.q * i) + (self.q - 1)
             for j in range(_min, _max):
-                a = signalsWithNoise[j] * np.sin(2 * np.pi / self.period * (j * self.Ts) + np.pi)
-                b = signalsWithNoise[j] * np.sin(2 * np.pi / self.period * (j * self.Ts))
+                j = _min
+                a += signalsWithNoise[j] * np.sin(2 * np.pi / self.period * (j * self.Ts) + np.pi)
+                b += signalsWithNoise[j] * np.sin(2 * np.pi / self.period * (j * self.Ts))
                 if a > b:
                     signalsWithNoise[i] = 1
                 else:
                     signalsWithNoise[i] = 0
-        print(signalsWithNoise)
-        return signalsWithNoise
+
+        writeInFile(str(signalsWithNoise), path + '\data\detected_signals.txt', 'Проверенные детектором сигналы')
+        print(signalsWithNoise[:length:])
+        return signalsWithNoise[:length:]
+    #TODO: Пофиксить сумму
+    #TODO: Доделать чекер
+
+    # def errorChecker(self):
+    #     api = mathcadApi()
+    #
+    #     for i in range(1, 25):
+    #         sigma = i+1/10
+    #         N = api.rnorm(len(self.matrix), 0, sigma)
+    #         H =
 
     def start(self):
         # title('Модель цифровой системы передачи')
@@ -74,10 +92,7 @@ class digitalTransmission(object):
         При подаче на вход массива
         """
         cSignals = self.BPSK()
-        plot(cSignals, np.array(self.time)) # Отрисовываем график
-        savefig(path + '/data/plots/p1.png')
-        print('Сохраняю график в {}/data/plots/'.format(path))
-
+        savePlot(plt, path + '\data\plots\p2.png', cSignals, np.array(self.time))
 
 
         """
@@ -85,10 +100,8 @@ class digitalTransmission(object):
         """
         api = mathcadApi()
         noise = api.rnorm(len(cSignals), 0, self.sigma)
-        signalsWithNoise = np.ndarray.tolist(cSignals + noise)
-        W = [i for i in range(len(list(signalsWithNoise)))]
-        cla()
-        plot(W, signalsWithNoise)
-        savefig(path + '/data/plots/p2.png')
-        print('Сохраняю график в {}/data/plots/'.format(path))
-        #self.detect(signalsWithNoise)
+        signalsWithNoise = cSignals + noise
+
+        W = [i for i in range(len(signalsWithNoise))]
+        savePlot(plt, path + '\data\plots\p2.png', W, signalsWithNoise)
+        self.detect(signalsWithNoise)
