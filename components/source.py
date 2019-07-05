@@ -42,12 +42,12 @@ class digitalTransmission(object):
         return np.array(cSignals)
 
     def detect(self, signalsWithNoise):
-        signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
+        #signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
         print(np.floor(len(signalsWithNoise)))
-        length = int(np.floor(len(signalsWithNoise) / self.q)) - 1
+        #length = int(np.floor(len(signalsWithNoise) / self.q)) - 1
         a = 0
         b = 0
-        for i in range(length):
+        for i in range(int(len(signalsWithNoise) / self.q) - 1):
             _min = self.q * i
             _max = (self.q * i) + (self.q - 1)
             for j in range(_min, _max):
@@ -60,8 +60,8 @@ class digitalTransmission(object):
                     signalsWithNoise[i] = 0
 
         writeInFile(str(signalsWithNoise), path + '\data\detected_signals.txt', 'Проверенные детектором сигналы')
-        print(signalsWithNoise[:length:])
-        return signalsWithNoise[:length:]
+        print(signalsWithNoise[:int(len(signalsWithNoise))-1:])
+        return signalsWithNoise[:int(len(signalsWithNoise))-1:]
     #TODO: Пофиксить сумму
     #TODO: Доделать чекер
 
@@ -92,7 +92,7 @@ class digitalTransmission(object):
         При подаче на вход массива
         """
         cSignals = self.BPSK()
-        savePlot(plt, path + '\data\plots\p2.png', cSignals, np.array(self.time))
+        savePlot(plt, 'p1.png', cSignals, np.array(self.time))
 
 
         """
@@ -103,5 +103,5 @@ class digitalTransmission(object):
         signalsWithNoise = cSignals + noise
 
         W = [i for i in range(len(signalsWithNoise))]
-        savePlot(plt, path + '\data\plots\p2.png', W, signalsWithNoise)
+        savePlot(plt, 'p2.png', W, signalsWithNoise)
         self.detect(signalsWithNoise)

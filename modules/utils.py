@@ -1,4 +1,5 @@
 from matplotlib.pyplot import *
+from config import img_path
 
 def genText(n):
     import random
@@ -11,8 +12,8 @@ def writeInFile(data, path, text):
         print('{} был(-о/и) записан(-о/ы) в {}'.format(text, path))
 
 
-def savePlot(plt, path, x_coords, y_coords):
+def savePlot(plt, name, x_coords, y_coords):
     plt.cla()
     plt.plot(x_coords, y_coords)
-    plt.savefig(path)
-    print('Сохраняю график в {}'.format(path))
+    plt.savefig(img_path + name)
+    print('Сохраняю график в {}'.format(img_path + name))
