@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from modules.utils import writeInFile, savePlot, tolist
+from modules.utils import writeInFile, savePlot, parseErrorChances
 from modules.api import mathcadApi
 from config import path
 
@@ -11,13 +11,13 @@ class digitalTransmission(object):
         self.q = q
         self.tau = tau
         self.matrix = matrix
+        self.cSignals = list()
         self.period = self.tau  # Период несущего колебания
         self.Ts = self.period / self.q  # Период дескритизации
         self.time = [dig for dig in np.arange(0, len(self.matrix) * self.tau - self.Ts, self.Ts)]  # Модельное время
 
     # Модель BPSK модулятора
     def BPSK(self):
-        count = 0
         cSignals = list()
         print('Пожалуйста, подождите. Записываем массив отсчётов сигнала')
         for descrPeriod in self.time:  # Период дескритизации
@@ -28,21 +28,13 @@ class digitalTransmission(object):
                 phi = np.pi
 
             cSignals.append(np.sin(2 * np.pi * descrPeriod / self.period + phi))
-            count += 1
             # if self.debug: print('[PHI: {}]'.format(phi))
 
         writeInFile(str(cSignals), path + '\data\count_signals.txt', 'Отсчёты сигналов')
 
-        # for k, v in M:
-        #     print('''
-        #     [Отсчёты сигналов]
-        #     {} - {}
-        #     '''.format(k, v))
-
-        #return np.array(cSignals)
         return cSignals
 
-    def detect(self, signalsWithNoise):
+    def detect(self, signalsWithNoise, write=True):
         signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
         length = int(np.floor(len(signalsWithNoise) / self.q)) + 1
         for i in range(length):
@@ -56,41 +48,36 @@ class digitalTransmission(object):
                 else:
                     signalsWithNoise[i] = 0
 
+        if write:
+            writeInFile(str(signalsWithNoise[:length:]), path + '\data\detected_signals.txt', 'Проверенные детектором сигналы')
 
-        writeInFile(str(signalsWithNoise[:length:]), path + '\data\detected_signals.txt', 'Проверенные детектором сигналы')
         return signalsWithNoise[:length:]
-    #TODO: Пофиксить сумму
-    #TODO: Доделать чекер
 
-    # def errorChecker(self):
-    #     api = mathcadApi()
-    #
-    #     for i in range(1, 25):
-    #         sigma = i+1/10
-    #         N = api.rnorm(len(self.matrix), 0, sigma)
-    #         H =
+    def errorChances(self, cSignals):
+        api = mathcadApi()
+        P = list()
+        for i in range(1, 25):
+            sigma = (i + 1) / 10
+            N = api.rnorm(len(cSignals), 0, sigma)
+            H = cSignals + N
+            R = self.detect(H, write=False)
+            P.insert(i, api.getErrorChance(R, self.matrix))
+        return P
 
     def start(self):
-        # title('Модель цифровой системы передачи')
-        # xlabel('Модельное время')
-        # ylabel('Амлитуда модуляции')
-
-        # if self.debug:
-        #     print('''
-        #         [Период дискретизации] {}
-        #         [Период несущего колебания] {}
-        #     '''.format(Ts, T))
+        print(''
+            '[Период дискретизации: {}]\n' \
+            '[Период несущего колебания {}]'.format(self.Ts, self.period))
 
         writeInFile(str(self.time), path + '\data\model_text.dat', 'Модельное время')
 
         """
-        Получить массив отсчетов сигнала с выхода модулятора M, 
-        соответствующих модельному времени. 
+        Получаем массив отсчетов сигнала с выхода модулятора M, 
+        соответствующих модельному времени.
         При подаче на вход массива
         """
         cSignals = self.BPSK()
-        savePlot(plt, 'p1.png', cSignals, np.array(self.time))
-
+        savePlot(plt, 'p1.png', np.array(self.time), cSignals)
 
         """
         Добавляем шум
@@ -101,13 +88,19 @@ class digitalTransmission(object):
         W = [i for i in range(len(signalsWithNoise))]
         savePlot(plt, 'p2.png', W, signalsWithNoise)
 
-
         """
         Детектим массив
+        Выявляем ошибки
+        Получаем вероятность ошибок
         """
         matrix2 = self.detect(signalsWithNoise)
-        #matrix2 = api.rbinom(1000, 1, 0.2)
-        print(matrix2)
-        print(self.matrix)
-        print('Кол-во ошибок:', api.getErrors(self.matrix, matrix2))
-        print('Вероятность ошибок:', api.getErrorChance(self.matrix, matrix2))
+        print('[Кол-во ошибок: {}]'.format(api.getErrors(self.matrix, matrix2)))
+        print('[Вероятность ошибок: {}]'.format(api.getErrorChance(self.matrix, matrix2)))
+
+        o = self.errorChances(cSignals)
+
+        timeline = [(i + 1) / 10 for i in range(len(o))]
+        savePlot(plt, 'p3.png', timeline, o)
+        writeInFile(str(o), path + '\data\error_chance_q={}.txt'.format(self.q), 'Шансы ошибок')
+
+        parseErrorChances(plt, timeline)
