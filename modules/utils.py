@@ -19,3 +19,7 @@ def savePlot(plt, name, x_coords, y_coords, clear=True):
     plt.plot(x_coords, y_coords)
     plt.savefig(img_path + name)
     print('Сохраняю график в {}'.format(img_path + name))
+
+
+def tolist(array):
+    return np.ndarray.tolist(array)

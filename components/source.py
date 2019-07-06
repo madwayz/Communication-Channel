@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from modules.utils import writeInFile, savePlot
+from modules.utils import writeInFile, savePlot, tolist
 from modules.api import mathcadApi
 from config import path
 
@@ -44,8 +44,6 @@ class digitalTransmission(object):
 
     def detect(self, signalsWithNoise):
         signalsWithNoise = np.ndarray.tolist(signalsWithNoise)
-        print(signalsWithNoise)
-        #print(np.floor(len(signalsWithNoise)))
         length = int(np.floor(len(signalsWithNoise) / self.q)) + 1
         for i in range(length):
             a = 0
@@ -79,7 +77,7 @@ class digitalTransmission(object):
 
         # if self.debug:
         #     print('''
-        #         [Период дескритизации] {}
+        #         [Период дискретизации] {}
         #         [Период несущего колебания] {}
         #     '''.format(Ts, T))
 
@@ -100,8 +98,16 @@ class digitalTransmission(object):
         api = mathcadApi()
         noise = api.rnorm(len(cSignals), 0, self.sigma)
         signalsWithNoise = cSignals + noise
-        print(np.ndarray.tolist(signalsWithNoise))
-
         W = [i for i in range(len(signalsWithNoise))]
         savePlot(plt, 'p2.png', W, signalsWithNoise)
-        self.detect(signalsWithNoise)
+
+
+        """
+        Детектим массив
+        """
+        matrix2 = self.detect(signalsWithNoise)
+        #matrix2 = api.rbinom(1000, 1, 0.2)
+        print(matrix2)
+        print(self.matrix)
+        print('Кол-во ошибок:', api.getErrors(self.matrix, matrix2))
+        print('Вероятность ошибок:', api.getErrorChance(self.matrix, matrix2))
