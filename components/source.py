@@ -30,7 +30,7 @@ class digitalTransmission(object):
         if sum(b[:3]) != 0:
             for j in range(7):
                 column = api.subcolumn(N, j)
-                if sum(np.logical_xor(column, b)) != 0:
+                if sum(np.logical_xor(column, b)) == 0:
                     T[j] ^= 1
         return T
 
@@ -93,6 +93,7 @@ class digitalTransmission(object):
             R = self.detect(H)
             if decoding:
                 F = self.decoding(R, kwargs['N'])
+                print(api.getErrorChance(D, F))
                 P.insert(i, api.getErrorChance(D, F))
             else:
                 P.insert(i, api.getErrorChance(D, R))

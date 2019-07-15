@@ -10,7 +10,7 @@ if __name__ == '__main__':
     np.seterr(divide='ignore')
 
     # Генерируем массив
-    D = api.rbinom(1000, 1, 0.5)
+    D = api.rbinom(500, 1, 0.5)
 
     # Создаём экземпляр класса
     dt = digitalTransmission(sigma=0.5, q=20, tau=0.1, matrix=D)
@@ -64,7 +64,6 @@ if __name__ == '__main__':
     print('T ^ X: ', sum(np.bitwise_xor(T, X)))
     print('I:', I)
     print('S:', S)
-
 
     Q1 = dt.getErrorChances(M, D, N=N, decoding=True)
     timeline = [(i + 1) / 10 for i in range(len(Q1))]
