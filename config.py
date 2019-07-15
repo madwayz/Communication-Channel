@@ -1,4 +1,3 @@
-from matplotlib.pyplot import *
 import os
 
 path = os.getcwd()

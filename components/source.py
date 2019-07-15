@@ -1,38 +1,55 @@
-from matplotlib import pyplot as plt
-from modules.utils import writeInFile, savePlot, tolist, createTimeLine
+from modules.utils import tolist
 from modules.api import mathcadApi
-from config import path
 import numpy as np
 
 class digitalTransmission(object):
     def __init__(self, sigma, q, tau, matrix):
-        self.sigma = sigma
-        self.q = q # Количество семплов
-        self.tau = tau # Единичное время
-        self.matrix = matrix
+        self.sigma = sigma  # Среднеквадратическое отклонение для шума
+        self.q = q  # Количество семплов
+        self.tau = tau  # Единичное время
+        self.matrix = matrix  # Входная матрица
         self.period = self.tau  # Период несущего колебания
-        self.Ts = self.period / self.q  # Период дескритизации
+        self.Ts = self.period / self.q  # Период семплирования
+        self.k = 4
+        self.n = 7
 
     def coder(self, t):
         t.insert(4, t[0] ^ t[1] ^ t[3])
         t.insert(5, t[0] ^ t[2] ^ t[3])
         t.insert(6, t[1] ^ t[2] ^ t[3])
+        #print(t)
         return t
 
-    def decoder(self, R):
+    def decoder(self, T, N):
         api = mathcadApi()
-
+        #print('T', T)
         b = list()
-        b.insert(0, R[0] ^ R[1] ^ R[3] ^ R[4])
-        b.insert(1, R[0] ^ R[2] ^ R[3] ^ R[5])
-        b.insert(2, R[1] ^ R[2] ^ R[3] ^ R[6])
-        _sum = sum([x for x in range(3)])
-        if _sum != 0:
-            for i in range(3):
-                if sum(R[i] ^ b) == 0:
-                    R[i] = R[i] ^ 1
-            api.submatrix(R, 0, 3, 0, 0)
+        b.insert(0, T[0] ^ T[1] ^ T[3] ^ T[4])
+        b.insert(1, T[0] ^ T[2] ^ T[3] ^ T[5])
+        b.insert(2, T[1] ^ T[2] ^ T[3] ^ T[6])
+        if sum(b[:3]) != 0:
+            for j in range(7):
+                column = api.subcolumn(N, j)
+                if sum(np.logical_xor(column, b)) != 0:
+                    T[j] ^= 1
+        return T
 
+    def coding(self, matrix):
+        api = mathcadApi()
+        c = self.coder(api.submatrix(matrix, 0, 3, 0, 0))
+        for j in range(1, int(np.floor(len(matrix)/self.k))-1):
+            b = self.coder(api.submatrix(matrix, self.k * j, self.k * j + (self.k - 1), 0, 0))
+            c = api.stack(c, b)
+        return c
+
+    def decoding(self, matrix, N):
+        api = mathcadApi()
+        c = self.decoder(api.submatrix(matrix, 0, 6, 0, 0), N)
+        for p in range(1, int(np.floor(len(matrix)/self.n))-1):
+            a = self.decoder(api.submatrix(matrix, p * self.n, (p + 1)* self.n - 1, 0, 0), N)
+            #a = self.decoder(api.submatrix(matrix, p * self.n, (p + 1) * self.n - 1, 0, 0), N)
+            c = api.stack(c, a)
+        return c
 
     # Модель BPSK модулятора
     def BPSK(self, time, matrix):
@@ -48,7 +65,6 @@ class digitalTransmission(object):
 
             cSignals.append(np.sin(2 * np.pi * descrPeriod / self.period + phi))
             # if self.debug: print('[PHI: {}]'.format(phi))
-
         return cSignals
 
     def detect(self, M_noise):
@@ -65,16 +81,19 @@ class digitalTransmission(object):
                 M_noise[i] = 1
             else:
                 M_noise[i] = 0
-
         return M_noise[:length:]
 
-    def errorChances(self, M, D):
+    def getErrorChances(self, M, D, decoding=False, **kwargs):
         api = mathcadApi()
         P = list()
         for i in range(25):
-            sigma = 0.1 + 0.1 * i
+            sigma = (i + 1) / 10
             N = api.rnorm(len(M), 0, sigma)
             H = M + N
             R = self.detect(H)
-            P.insert(i, api.getErrorChance(D, R))
+            if decoding:
+                F = self.decoding(R, kwargs['N'])
+                P.insert(i, api.getErrorChance(D, F))
+            else:
+                P.insert(i, api.getErrorChance(D, R))
         return P
