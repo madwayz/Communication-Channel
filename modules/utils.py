@@ -23,8 +23,6 @@ def writeInFile(data, path, text):
 
         print('{} был(-о/и) записан(-о/ы) в {}'.format(text, path))
 
-
-
 def savePlot(plt, name, xCoords=None, yCoords=None, label=None, xlabel=None, ylabel=None):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -43,7 +41,6 @@ def savePlot(plt, name, xCoords=None, yCoords=None, label=None, xlabel=None, yla
     show()
 
     print('Сохраняю график в {}'.format(img_path + name))
-
 
 def parseErrorChances(plt, timeline):
     plt.xlabel(r'$\frac{i+10}{10}$')

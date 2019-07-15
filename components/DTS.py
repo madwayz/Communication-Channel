@@ -13,14 +13,14 @@ class digitalTransmission(object):
         self.k = 4
         self.n = 7
 
-    def coder(self, t):
+    def channel_encoder(self, t):
         t.insert(4, t[0] ^ t[1] ^ t[3])
         t.insert(5, t[0] ^ t[2] ^ t[3])
         t.insert(6, t[1] ^ t[2] ^ t[3])
         #print(t)
         return t
 
-    def decoder(self, T, N):
+    def channel_decoder(self, T, N):
         api = mathcadApi()
         #print('T', T)
         b = list()
@@ -36,18 +36,17 @@ class digitalTransmission(object):
 
     def coding(self, matrix):
         api = mathcadApi()
-        c = self.coder(api.submatrix(matrix, 0, 3, 0, 0))
+        c = self.channel_encoder(api.submatrix(matrix, 0, 3, 0, 0))
         for j in range(1, int(np.floor(len(matrix)/self.k))-1):
-            b = self.coder(api.submatrix(matrix, self.k * j, self.k * j + (self.k - 1), 0, 0))
+            b = self.channel_encoder(api.submatrix(matrix, self.k * j, self.k * j + (self.k - 1), 0, 0))
             c = api.stack(c, b)
         return c
 
     def decoding(self, matrix, N):
         api = mathcadApi()
-        c = self.decoder(api.submatrix(matrix, 0, 6, 0, 0), N)
+        c = self.channel_decoder(api.submatrix(matrix, 0, 6, 0, 0), N)
         for p in range(1, int(np.floor(len(matrix)/self.n))-1):
-            a = self.decoder(api.submatrix(matrix, p * self.n, (p + 1)* self.n - 1, 0, 0), N)
-            #a = self.decoder(api.submatrix(matrix, p * self.n, (p + 1) * self.n - 1, 0, 0), N)
+            a = self.channel_decoder(api.submatrix(matrix, p * self.n, (p + 1) * self.n - 1, 0, 0), N)
             c = api.stack(c, a)
         return c
 
@@ -93,7 +92,6 @@ class digitalTransmission(object):
             R = self.detect(H)
             if decoding:
                 F = self.decoding(R, kwargs['N'])
-                print(api.getErrorChance(D, F))
                 P.insert(i, api.getErrorChance(D, F))
             else:
                 P.insert(i, api.getErrorChance(D, R))

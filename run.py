@@ -1,9 +1,11 @@
 from matplotlib import pyplot as plt
-from components.source import digitalTransmission
+from components.DTS import digitalTransmission
+from components.encryption import SimpleDEncryptor
 from modules.utils import writeInFile, savePlot, createTimeLine, parseErrorChances
 from modules.api import mathcadApi
 from config import path
 import numpy as np
+import ast
 
 if __name__ == '__main__':
     api = mathcadApi()
@@ -20,7 +22,7 @@ if __name__ == '__main__':
     print("TIMELINE", timeline)
 
     """
-    Получаем массив отсчетов сигнала с выхода модулятора M, 
+    Получаем массив отсчетов сигнала с выхода модулятора M,
     соответствующих модельному времени.
     При подаче на вход массива
     """
@@ -52,9 +54,9 @@ if __name__ == '__main__':
     ]
     E = [0, 1, 1, 0, 0, 0, 0]
 
-    T = dt.coder(a)
+    T = dt.channel_encoder(a)
     R = [T[i] ^ E[i] for i in range(len(E)) if len(E) == len(T)]
-    X = dt.decoder(R, N)
+    X = dt.channel_decoder(R, N)
     I = dt.coding(D)
     S = dt.decoding(D, N)
 
@@ -70,7 +72,17 @@ if __name__ == '__main__':
     savePlot(plt, 'p3.png', xCoords=timeline, yCoords=np.log(o), xlabel=r'$\frac{i+10}{10}$', ylabel='Вероятность ошибок')
     writeInFile(str(o), path + '\data\error_chance_q={}.txt'.format(dt.q), 'Вероятность ошибок O')
     parseErrorChances(plt, timeline)
-    print('Q1', np.array(Q1))
 
     savePlot(plt, 'p5.png', timeline, np.log(Q1), xlabel=r'$\frac{i+10}{10}$', ylabel='Вероятность ошибок Q1')
     plt.grid()
+
+
+
+    plaintext = np.fromfile('data\plaintext.txt', dtype='uint16')
+    key = api.rbinom(8, 1, 0.5)
+
+    den = SimpleDEncryptor()
+    den.encrypt(plaintext, key)
+    with open('data\cyphertext.txt', 'r+') as f:
+        cypher = ast.literal_eval(f.read())
+        den.decrypt(cypher, 16)

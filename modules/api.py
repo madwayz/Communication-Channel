@@ -13,7 +13,8 @@ class mathcadApi:
     def stack(self, a, b):
         vector_count = 0
         array_count = 0
-        if type(a[0]) == list and type(b[0]) == list:
+
+        if list in a and list in b:
             array_count += 1
         else:
             vector_count += 1
@@ -63,13 +64,38 @@ class mathcadApi:
         return len(matrix) - 1
 
     def getErrors(self, m1, m2):
-        if len(m1) < len(m2):
-            return sum([m1[i] ^ m2[i] for i in range(len(m1))])
-        else:
-            return sum([m1[i] ^ m2[i] for i in range(len(m2))])
+        length = len(m1) if len(m1) < len(m2) else len(m2)
+        return sum([m1[i] ^ m2[i] for i in range(length)])
 
     def getErrorChance(self, m1, m2):
-        if len(m1) < len(m2):
-            return sum([m1[i] ^ m2[i] for i in range(len(m1))]) / len(m1)
-        else:
-            return sum([m1[i] ^ m2[i] for i in range(len(m2))]) / len(m1)
+        length = len(m1) if len(m1) < len(m2) else len(m2)
+        return sum([m1[i] ^ m2[i] for i in range(length)]) / len(m1)
+
+    def dec2bin(self, x, n):
+        N = list()
+        for i in range(n - 1):
+            if x >= pow(2, n - 1 - i):
+                N.insert(i, 1)
+                x += pow(-2, n - 1 - i)
+            N.insert(i, 0)
+        return N
+
+    def dec2binM(self, x, n):
+        api = mathcadApi()
+        k = list()
+        for i in range(1, api.last(x)):
+            k = api.stack(k, self.dec2bin(x[i], n))
+        return api.submatrix(k, 1, api.last(k), 0, 0)
+
+    def bin2dec(self, t, j):
+        api = mathcadApi()
+        B = list()
+        for i in range(int(len(t) / j - 1)):
+            B.insert(i, self.bin2decM(api.submatrix(t, j * i, j * (i + 1) - 1, 0, 0)))
+        return B
+
+    def bin2decM(self, x):
+        s = 0
+        for i in range(len(x) - 1):
+            s += x[i] * pow(2, len(x) - i - 1)
+        return s
