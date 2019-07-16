@@ -12,7 +12,7 @@ if __name__ == '__main__':
     np.seterr(divide='ignore')
 
     # Генерируем массив
-    D = api.rbinom(500, 1, 0.5)
+    D = api.rbinom(1000, 1, 0.5)
 
     # Создаём экземпляр класса
     dt = digitalTransmission(sigma=0.5, q=20, tau=0.1, matrix=D)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     noise = api.rnorm(len(M), 0, dt.sigma)
     M_noise = M + noise
     W = createTimeLine(len(M_noise))
-    savePlot(plt, 'p2.png', xCoords=W, yCoords=M_noise, xlabel=r'len(M_noise)', ylabel='M_noise')
+    savePlot(plt, 'p2.png', xCoords=W, yCoords=M_noise, xlabel=r'len(M_noise)', ylabel='Сигнал с шумом')
 
     """
     Детектим массив
