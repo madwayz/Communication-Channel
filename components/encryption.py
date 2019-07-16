@@ -19,12 +19,12 @@ class SimpleDEncryptor:
                 v.append(int(k[f] ^ key[f]))
 
             CS = np.array(api.stack(CS, v)).astype(np.int).tolist()
-        cypher = api.submatrix(CS, 1, api.last(CS), 0, 0)
+        cipher = api.submatrix(CS, 1, api.last(CS), 0, 0)
         with open('data\cyphertext.txt', 'w+') as f:
-            f.write(str(cypher))
-        print(cypher)
+            f.write(str(cipher))
+        print('Cypher', cipher)
 
-    def decrypt(self, cyphertext, j):
+    def decrypt(self, ciphertext, j):
         api = mathcadApi()
-        print(api.bin2dec(cyphertext, j))
+        print(api.bin2dec(ciphertext, j))
 

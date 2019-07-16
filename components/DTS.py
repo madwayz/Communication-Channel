@@ -17,12 +17,10 @@ class digitalTransmission(object):
         t.insert(4, t[0] ^ t[1] ^ t[3])
         t.insert(5, t[0] ^ t[2] ^ t[3])
         t.insert(6, t[1] ^ t[2] ^ t[3])
-        #print(t)
         return t
 
     def channel_decoder(self, T, N):
         api = mathcadApi()
-        #print('T', T)
         b = list()
         b.insert(0, T[0] ^ T[1] ^ T[3] ^ T[4])
         b.insert(1, T[0] ^ T[2] ^ T[3] ^ T[5])
